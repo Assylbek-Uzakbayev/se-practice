@@ -17,5 +17,5 @@ AI-use level D. This is a disclosure prepared for review by Uzakbayev Assylbek.
 
 **Anything I accepted from the AI without fully understanding it:** Student review pending. This draft does not make a claim about the student's understanding.
 
-Signed: <your name>
-Date:
+Signed: Uzakbayev Assylbek
+Date: 2026-11-15

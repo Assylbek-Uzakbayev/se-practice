@@ -16,11 +16,11 @@ calls:
   first_run_s_fails: 9
 
 checker:
-  pass: 29
-  fail: 1
+  pass: 30
+  fail: 0
   error: 0
-  commit: "e6cf5b9"
-  known_fails: [L5]
+  commit: "5393425"
+  known_fails: []
 
 review_findings:
   - "S08 rejected an existing booking without its end only after both endpoints were required."
@@ -33,4 +33,4 @@ honesty:
   definition_written_by_me: "no"
   calls_unedited: "yes"
   outputs_unedited: "yes"
-  ai_usage_disclosed: "no"
+  ai_usage_disclosed: "yes"
