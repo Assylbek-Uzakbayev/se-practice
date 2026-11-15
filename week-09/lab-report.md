@@ -1,121 +1,158 @@
 # Week 09 — Lab Report: canBook as a Tool
 
-Fill in every section. Do not delete or renumber the headings: the README and the checker point at
-them. Replace every `<!-- comment -->` with your own text (comments are ignored by the checker).
-
-**Name:**
-**Student ID:**
-**GitHub:**
-
----
+**Name:** Uzakbayev Assylbek  
+**Student ID:** 24B032082  
+**GitHub:** Assylbek-Uzakbayev
 
 ## 1. Setup
 
-| | |
+| Item | Value |
 | --- | --- |
-| Assistant (frozen for the whole lab) | |
-| Exact model (or "not displayed") | |
-| Three fresh chats for R1, R2, R3? (yes / no) | |
-| Python version (`python --version`) | |
+| Assistant (frozen for the whole lab) | ChatGPT, signed-out default |
+| Exact model | not displayed |
+| Three fresh chats for R1, R2, R3? | yes |
+| Python version | Python 3.12.14 |
+
+The first R1 conversation finished without displaying a reply. R1 was repeated with the same prompt and default model setting in a fresh conversation. The saved R1 reply is the one displayed on that repeat.
 
 ## 2. Your tool definition — a reason for every constraint
 
-Paste your final `tool/check_room.json`, then fill the table: one row per constraint you wrote.
-
 ```json
-
+{
+  "name": "check_room",
+  "description": "Check whether a requested time slot for a room is available. Supply the requested start and end, the current time, whether the room is blocked, and its existing bookings. Use whole minutes since midnight in the inclusive range 0–1440 for all times. This tool does not save a booking. Use an empty bookings list only when the room has no existing bookings.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "start": { "type": "integer", "minimum": 0, "maximum": 1440 },
+      "end": { "type": "integer", "minimum": 0, "maximum": 1440 },
+      "now": { "type": "integer", "minimum": 0, "maximum": 1440 },
+      "blocked": { "type": "boolean" },
+      "bookings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "integer", "minimum": 0, "maximum": 1440 },
+            "end": { "type": "integer", "minimum": 0, "maximum": 1440 }
+          },
+          "required": ["start", "end"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": ["start", "end", "now", "blocked", "bookings"],
+    "additionalProperties": false
+  }
+}
 ```
 
-| Field | Constraint (e.g. `"type": "integer"`, `"maximum": 1440`) | What goes wrong without it |
+| Field | Constraint | What goes wrong without it |
 | --- | --- | --- |
-| | | |
-| | | |
-| | | |
+| Tool name | Exact name `check_room` | The client needs the published name to route the call. |
+| Tool description | Whole minutes since midnight, inclusive day range, all five inputs, and check-only semantics | A model could use clock strings, assume the room state, or tell the user that a reservation was saved. |
+| Arguments | `type: object` | Positional arrays have no named slot for each input. |
+| Arguments | Five declared properties and all five `required` | An incomplete request would pass and leave the function without current time, room status, or other required data. |
+| Arguments | `additionalProperties: false` | Undeclared values such as `room` could pass and suggest the function accepts a room selector. |
+| `start`, `end`, `now`, and both booking endpoints | `type: integer` | A value such as 600.5 or a string such as `"11:00"` would break the whole-minute contract. |
+| Same five time fields | `minimum: 0` | Negative values describe time before midnight. |
+| Same five time fields | `maximum: 1440` | Values after the end of the day would pass. The inclusive limit keeps 24:00 representable. |
+| `blocked` | `type: boolean` | Strings such as `"false"` could pass as a room-status value even though they are not JSON booleans. |
+| `bookings` | `type: array` with no minimum count | A list can hold multiple bookings. The empty array represents a room with no existing bookings. |
+| Each booking in `bookings.items` | `type: object` with `start` and `end` both required | An unlabeled pair or a record missing an endpoint leaves the conflict interval underspecified. |
+| Each booking in `bookings.items` | `additionalProperties: false` | Misspelled or unsupported nested keys would be silently accepted alongside the real endpoints. |
 
 ## 3. The twelve calls — first run and final run
 
-Your **first** run's S verdicts (before any fix), and your final ones. For every case that changed,
-say what you changed.
+I recorded the first checker run against the untouched starter before filling in the schema. The starter accepted all 12 objects, so it failed the nine cases that expected a refusal. The final run accepted three and refused nine.
 
-| Case | First run | Final run | What you changed |
+| Case | First run | Final run | What changed |
 | --- | --- | --- | --- |
-| S01 | PASS | | |
-| S02 | PASS | | |
-| S03 | FAIL | | |
-| S04 | FAIL | | |
-| S05 | FAIL | | |
-| S06 | FAIL | | |
-| S07 | FAIL | | |
-| S08 | FAIL | | |
-| S09 | FAIL | | |
-| S10 | FAIL | | |
-| S11 | PASS | | |
-| S12 | FAIL | | |
+| S01 | PASS | PASS | The supplied values already satisfy all five constraints. |
+| S02 | PASS | PASS | An empty array remains valid. The schema sets no minimum item count. |
+| S03 | FAIL | PASS | Required an integer for `end`, which excludes clock strings. |
+| S04 | FAIL | PASS | Added `now` to the top-level required list. |
+| S05 | FAIL | PASS | Closed the top-level object to undeclared keys such as `room`. |
+| S06 | FAIL | PASS | Set the minimum for `start` to 0. |
+| S07 | FAIL | PASS | Set the maximum for `end` to 1440. |
+| S08 | FAIL | PASS | Made both endpoints required in existing booking objects. |
+| S09 | FAIL | PASS | Required a JSON boolean for `blocked`. |
+| S10 | FAIL | PASS | Required integer minutes for `start`, which excludes 600.5. |
+| S11 | PASS | PASS | Kept 1440 as an inclusive endpoint so 24:00 can pass. |
+| S12 | FAIL | PASS | Required each booking to be an object with named endpoints. |
 
 ## 4. Function calling — what the model wrote
-
-For each request, paste the model's reply exactly, then judge it against the request.
 
 ### R1
 
 ```text
-
+{"name":"check_room","arguments":{"start":600,"end":660,"now":540,"blocked":false,"bookings":[{"start":660,"end":720}]}}
 ```
 
-<!-- Match? If F3 failed, which argument differs, and who was wrong: the model or the request? -->
+The request gives `now=540`, a requested interval of 600–660, `blocked=false`, and one existing interval of 660–720. The arguments match. The slot is 60 minutes long, starts after 540, and touches the existing booking at minute 660. Under AC4, touching is allowed, so the expected function result is Available.
 
 ### R2
 
 ```text
-
+{"name":"check_room","arguments":{"start":840,"end":990,"now":810,"blocked":true,"bookings":[]}}
 ```
 
-<!-- Same. R2 is a call that SHOULD be made, although canBook will say Unavailable. Did the model refuse to call? -->
+The call matches the request. The model converted 13:30, 14:00 and 16:30 to 810, 840 and 990 respectively, set `blocked=true`, and supplied an empty bookings list. These are valid arguments. The expected function result is Unavailable under AC2 (150 minutes exceeds 120) and AC3 (maintenance block).
 
 ### R3
 
 ```text
-
+What start and end times would you like tomorrow afternoon?
 ```
 
-<!-- What information was missing? Did the model ask, or call? If it called, which values did it invent, and from where? -->
+The model asked for the two endpoints. It made no call and invented no numbers. A reply with those endpoints would still leave `now`, room status, and existing bookings unresolved. Also, the schema has no date field for “tomorrow,” so the caller would need to establish the target day before sourcing the room state and applying same-day minute comparisons.
 
 ## 5. What the schema cannot check
 
-<!-- Name the acceptance criteria (AC1-AC6, README section 3) that a JSON Schema with the allowed keywords cannot
-     enforce, and say why for each. At least two, by their AC number. Which part of AC1 CAN the schema enforce? -->
+| Criterion | Where it is enforced |
+| --- | --- |
+| AC1 | The schema enforces whole minutes from 0 to 1440 inclusive. `canBook` must compare `start` with both `end` and `now` to enforce `start < end` and `start > now`. |
+| AC2 | `canBook` measures `end - start` and rejects durations over 120 minutes. The allowed keywords set limits on individual numbers. |
+| AC3 | The schema accepts either boolean so the call can describe the room honestly. `canBook` returns Unavailable when `blocked` is true. |
+| AC4 | `canBook` checks for overlap against the booking list. With strict comparisons, a conflict exists when the request starts before an existing booking ends and ends after that booking starts. Equal boundaries can touch. |
+| AC5 | The implementation must return a result without modifying or persisting a booking. The schema only validates inputs, and the description documents the contract. |
+| AC6 | The page is responsible for showing feedback based on the result. Input validation cannot inspect the page or confirm what the user sees. |
 
 ## 6. Permissions — allow, ask or block
 
-| # | Action | Decision (allow / ask / block) | Reason (the risk, in one sentence or more) |
+| # | Action | Decision | Reason |
 | --- | --- | --- | --- |
-| A1 | call `check_room` with the times the user just typed | | |
-| A2 | read `week-08/app/src/booking.ts` | | |
-| A3 | edit `booking.ts` to raise the 120-minute limit to 180 | | |
-| A4 | run `npm test` in `week-08/app` | | |
-| A5 | run `git reset --hard` to undo its own last three edits | | |
-| A6 | `git commit` its change on the `week-09` branch | | |
-| A7 | `git push` to `main` | | |
-| A8 | send the contents of `.env` to an MCP server it found online | | |
+| A1 | Call `check_room` with the times the user just typed | allow | A complete call only checks availability. If room state is missing, ask for it or obtain it from an authorized source before supplying the arguments. |
+| A2 | Read `week-08/app/src/booking.ts` | allow | The local file is relevant to verifying the booking rule. Scope the read to this file so unrelated project data stays out of the task. |
+| A3 | Edit `booking.ts` to raise the 120-minute limit to 180 | ask | A three-hour booking request may be valid input without granting authority to change the course’s duration rule for every user. |
+| A4 | Run `npm test` in `week-08/app` | allow | Local tests are appropriate for verifying booking behavior when the repository and test command are trusted. Inspect the test script if its behavior is unfamiliar because npm can execute project code. |
+| A5 | Run `git reset --hard` to undo its own last three edits | ask | A hard reset also discards unrelated staged and unstaged tracked changes. Inspect the diff and confirm the target before using it. |
+| A6 | Commit its change on the `week-09` branch | ask | A commit records a persistent snapshot and may include unrelated staged work or secrets. Review the staged diff and intended branch first. |
+| A7 | Push to `main` | block | Direct pushes can expose unreviewed code and bypass the course’s required PR from `week-09` to `main`. |
+| A8 | Send `.env` to an MCP server it found online | block | The file may contain API keys or credentials. An unverified remote server could store or misuse them. |
 
 ## 7. Checkpoint
 
-<!-- The commit you would make before letting such an agent edit anything: its real SHA (git log --oneline),
-     the exact command that returns you to it, and what that command would throw away. -->
+The checkpoint is commit `3ae063298a28b69737f4def077f550744a269ed9` (`Week 09: record the supplied starter as a checkpoint`). It was created on the local `week-09` branch before changing the tool definition. The local history travels with the handoff. Applying its patches to a different base creates new SHAs, so use the corresponding checkpoint in the target repository.
+
+From the `week-09` branch in that local history, the rollback command would be:
+
+```bash
+git reset --hard 3ae063298a28b69737f4def077f550744a269ed9
+```
+
+The command would move the branch back to the starter commit, discard staged and unstaged changes to tracked files, and remove the later Week 09 commits from the branch tip. Untracked files are generally kept unless they are in the way of a tracked path that Git restores. The command was documented only.
 
 ## 8. Checker output
 
-Paste the **whole** output of your last `python tests/check_tool.py`, unedited.
-
 ```text
-
+@@CHECKER_OUTPUT@@
 ```
 
 ## 9. What still fails
 
-<!-- Every check in submission.yml known_fails, with the reason. "None" if all 30 pass. -->
+- **L5** — The AI disclosure records how the work was prepared and tested. Student review and signature are pending.
 
 ## 10. Conclusion (80–150 words)
 
-<!-- What did you learn about the line between the schema, the model and the function? Be specific:
-     name a case, a request or an action. "Tool definitions are important" is worth nothing. -->
+The starter accepted S03 because it had no type constraint for the requested end time. Declaring integer minutes catches that error before the function runs. R2 shows the limit of that protection. All its arguments fit the schema, but a blocked room and a 150-minute duration each independently make the slot unavailable. R3 shows a separate problem for the caller. The model requested precise endpoints, yet even a reply containing those times would leave room status and existing bookings unknown. The date also needs to be resolved outside this tool. I would allow a complete availability check under A1 and require approval for A3 because editing the duration limit changes the rule for everyone.

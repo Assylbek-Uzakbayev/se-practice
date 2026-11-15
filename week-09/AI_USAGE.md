@@ -1,26 +1,21 @@
 # AI Usage Disclosure — Week 09
 
-Required by the course academic policy (Generative AI use level **D — AI-integrated**).
-You are responsible for the accuracy, testing and integrity of everything you submit,
-including anything an AI tool produced.
+AI-use level D. This is a disclosure prepared for review by Uzakbayev Assylbek.
 
 | Tool | Exact model / plan | Used for | Which files it touched |
 | --- | --- | --- | --- |
-| | | Part 2 — writing the calls for R1, R2, R3 | calls/ (saved by me, unedited) |
-| | | | |
+| ChatGPT | not displayed (signed-out default) | Part 2 — producing the R1, R2 and R3 replies in separate chats | Model responses captured as `calls/r1.json`, `calls/r2.json`, and `calls/r3.txt` |
+| Codex | not displayed | Drafted the tool definition and lab report, recorded test runs, and prepared the declaration and Git handoff | `tool/check_room.json`, `lab-report.md`, `AI_USAGE.md`, `submission.yml` |
 
-**I wrote `tool/check_room.json` myself:** yes / no
-<!-- If an AI wrote or revised any of it, say which part, and how you checked it. -->
+**I wrote `tool/check_room.json` myself:** no. Codex drafted the entire definition. The supplied checker verified D1–D6 and S01–S12 after the starter run was recorded.
 
-**I used an AI to explain a JSON Schema keyword or a check:** yes / no
-<!-- If "yes": which one, and for what. -->
+**I used an AI to explain a JSON Schema keyword or a check:** yes. Codex drafted the rationale for the required fields, closed objects, array items and inclusive integer bounds, and explained how schema validation differs from the function’s checks.
 
-**Every reply in `calls/` and in lab-report.md section 4 is exactly what the model returned:** yes / no
+**Every reply in `calls/` and in lab-report.md section 4 is exactly what the model returned:** yes. Each visible reply was copied verbatim.
 
-**Every terminal output in lab-report.md was pasted from a real run, unedited:** yes / no
+**Every terminal output in lab-report.md was pasted from a real run, unedited:** yes. The complete final checker output is reproduced in Section 8.
 
-**Anything I accepted from the AI without fully understanding it:**
-<!-- Name the file and the part. An honest entry here costs far less than a blank one that turns out to be untrue. -->
+**Anything I accepted from the AI without fully understanding it:** Student review pending. This draft does not make a claim about the student's understanding.
 
 Signed: <your name>
 Date:
